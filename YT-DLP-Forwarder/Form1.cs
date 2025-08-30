@@ -1,9 +1,12 @@
+using System.Threading.Tasks;
 using YT_DLP_Forwarder.Properties;
 
 namespace YT_DLP_Forwarder
 {
     public partial class Form1 : Form
     {
+
+        private JsonHelper jsonHelper;
         public Form1()
         {
             InitializeComponent();
@@ -15,6 +18,9 @@ namespace YT_DLP_Forwarder
             {
                 path_textbox.Text = Settings.Default.defaultPath;
             }
+
+            thumbnail_pic.Image = Image.FromFile
+                (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -61,7 +67,7 @@ namespace YT_DLP_Forwarder
             command += " -P \"" + path + "\"";
             command += " " + url;
 
-
+            // TODO (replace with yt-dlp direct call)
             System.Diagnostics.Process.Start("cmd.exe", "/c " + command); // opens CMD to run the command
             result_box.Text = command; // displays the command (mostly for debug purposes)
 
@@ -113,6 +119,35 @@ namespace YT_DLP_Forwarder
 
             url_box.Text = "";
             url_box.Paste();
+
+            getThumbnailAndTitle();
+        }
+
+        private async Task getThumbnailAndTitle()
+        {
+            var process = new System.Diagnostics.Process();
+            process.StartInfo.FileName = "yt-dlp.exe";
+            process.StartInfo.Arguments = "-o cv --write-info-json --skip-download " + url_box.Text;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = true;
+            process.Start();
+
+            await process.WaitForExitAsync();
+            jsonHelper = new JsonHelper("cv.info.json");
+
+            string? thumbnailURL = jsonHelper.ReturnResultsFor("thumbnail");
+
+            // TODO (See if photo can be stored in %temp% or even just RAM?
+            using var client = new HttpClient();
+            byte[] imageBytes = await client.GetByteArrayAsync(thumbnailURL);
+            await File.WriteAllBytesAsync("thumbnail.jpg", imageBytes);
+
+            thumbnail_pic.Image = Image.FromFile
+                (Path.Combine(Application.StartupPath, "thumbnail.jpg"));
+            thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
+
+            string? vidName = jsonHelper.ReturnResultsFor("title");
+            vid_name_label.Text = vidName;
         }
 
         private void copy_button_Click(object sender, EventArgs e)
@@ -124,6 +159,11 @@ namespace YT_DLP_Forwarder
 
             //System.Windows.Forms.Clipboard.SetText(result_box.Text);
             Clipboard.SetText(result_box.Text);
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
