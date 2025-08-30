@@ -36,7 +36,9 @@
             path_textbox = new TextBox();
             browse_button = new Button();
             label2 = new Label();
-            resultBox = new TextBox();
+            result_box = new TextBox();
+            paste_button = new Button();
+            copy_button = new Button();
             SuspendLayout();
             // 
             // url_box
@@ -44,7 +46,7 @@
             url_box.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             url_box.Location = new Point(12, 27);
             url_box.Name = "url_box";
-            url_box.Size = new Size(374, 23);
+            url_box.Size = new Size(246, 23);
             url_box.TabIndex = 0;
             // 
             // label1
@@ -61,9 +63,9 @@
             // download_button
             // 
             download_button.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            download_button.Location = new Point(12, 211);
+            download_button.Location = new Point(12, 185);
             download_button.Name = "download_button";
-            download_button.Size = new Size(388, 45);
+            download_button.Size = new Size(332, 45);
             download_button.TabIndex = 2;
             download_button.Text = "DOWNLOAD";
             download_button.UseVisualStyleBackColor = true;
@@ -96,17 +98,17 @@
             // path_textbox
             // 
             path_textbox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            path_textbox.Location = new Point(12, 182);
+            path_textbox.Location = new Point(12, 156);
             path_textbox.Name = "path_textbox";
             path_textbox.ReadOnly = true;
-            path_textbox.Size = new Size(302, 23);
+            path_textbox.Size = new Size(246, 23);
             path_textbox.TabIndex = 5;
             path_textbox.TextChanged += path_textbox_TextChanged;
             // 
             // browse_button
             // 
             browse_button.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            browse_button.Location = new Point(320, 182);
+            browse_button.Location = new Point(264, 156);
             browse_button.Name = "browse_button";
             browse_button.Size = new Size(80, 23);
             browse_button.TabIndex = 6;
@@ -118,28 +120,52 @@
             // 
             label2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             label2.AutoSize = true;
-            label2.Location = new Point(12, 164);
+            label2.Location = new Point(12, 138);
             label2.Name = "label2";
             label2.Size = new Size(31, 15);
             label2.TabIndex = 7;
             label2.Text = "Path";
             label2.Click += label2_Click;
             // 
-            // resultBox
+            // result_box
             // 
-            resultBox.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            resultBox.Location = new Point(12, 262);
-            resultBox.Name = "resultBox";
-            resultBox.ReadOnly = true;
-            resultBox.Size = new Size(388, 23);
-            resultBox.TabIndex = 8;
+            result_box.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            result_box.Location = new Point(12, 236);
+            result_box.Name = "result_box";
+            result_box.ReadOnly = true;
+            result_box.Size = new Size(246, 23);
+            result_box.TabIndex = 8;
+            // 
+            // paste_button
+            // 
+            paste_button.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            paste_button.Location = new Point(264, 27);
+            paste_button.Name = "paste_button";
+            paste_button.Size = new Size(80, 23);
+            paste_button.TabIndex = 9;
+            paste_button.Text = "Paste";
+            paste_button.UseVisualStyleBackColor = true;
+            paste_button.Click += button1_Click_1;
+            // 
+            // copy_button
+            // 
+            copy_button.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            copy_button.Location = new Point(264, 236);
+            copy_button.Name = "copy_button";
+            copy_button.Size = new Size(80, 23);
+            copy_button.TabIndex = 10;
+            copy_button.Text = "Copy";
+            copy_button.UseVisualStyleBackColor = true;
+            copy_button.Click += copy_button_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(412, 297);
-            Controls.Add(resultBox);
+            ClientSize = new Size(356, 271);
+            Controls.Add(copy_button);
+            Controls.Add(paste_button);
+            Controls.Add(result_box);
             Controls.Add(label2);
             Controls.Add(browse_button);
             Controls.Add(path_textbox);
@@ -165,6 +191,8 @@
         private TextBox path_textbox;
         private Button browse_button;
         private Label label2;
-        private TextBox resultBox;
+        private TextBox result_box;
+        private Button paste_button;
+        private Button copy_button;
     }
 }

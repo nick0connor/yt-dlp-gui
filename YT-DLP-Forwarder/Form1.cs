@@ -61,9 +61,9 @@ namespace YT_DLP_Forwarder
             command += " -P \"" + path + "\"";
             command += " " + url;
 
-            
+
             System.Diagnostics.Process.Start("cmd.exe", "/c " + command); // opens CMD to run the command
-            resultBox.Text = command; // displays the command (mostly for debug purposes)
+            result_box.Text = command; // displays the command (mostly for debug purposes)
 
             saveOptionsToFile();
         }
@@ -96,9 +96,34 @@ namespace YT_DLP_Forwarder
         private void saveOptionsToFile()
         {
             Settings.Default.defaultPath = path_textbox.Text;
-            
-            
+
+
             Settings.Default.Save();
+        }
+
+        // Paste Button 
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            // If the clipboard contains non-text data
+            if (!Clipboard.GetDataObject().GetDataPresent(DataFormats.Text))
+            {
+                MessageBox.Show("No Text Copied!");
+                return;
+            }
+
+            url_box.Text = "";
+            url_box.Paste();
+        }
+
+        private void copy_button_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(result_box.Text))
+            {
+                return;
+            }
+
+            //System.Windows.Forms.Clipboard.SetText(result_box.Text);
+            Clipboard.SetText(result_box.Text);
         }
     }
 }
