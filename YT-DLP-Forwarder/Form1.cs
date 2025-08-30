@@ -1,3 +1,5 @@
+using YT_DLP_Forwarder.Properties;
+
 namespace YT_DLP_Forwarder
 {
     public partial class Form1 : Form
@@ -9,9 +11,10 @@ namespace YT_DLP_Forwarder
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            // TODO (default to Downloads)
-            //path_textbox.Text = "%userprofile%\\Downloads\\";
- 
+            if (!string.IsNullOrWhiteSpace(Settings.Default.defaultPath))
+            {
+                path_textbox.Text = Settings.Default.defaultPath;
+            }
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -61,6 +64,8 @@ namespace YT_DLP_Forwarder
             
             System.Diagnostics.Process.Start("cmd.exe", "/c " + command); // opens CMD to run the command
             resultBox.Text = command; // displays the command (mostly for debug purposes)
+
+            saveOptionsToFile();
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -86,6 +91,14 @@ namespace YT_DLP_Forwarder
         private void path_textbox_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void saveOptionsToFile()
+        {
+            Settings.Default.defaultPath = path_textbox.Text;
+            
+            
+            Settings.Default.Save();
         }
     }
 }
