@@ -19,8 +19,6 @@ public class JsonHelper
         {
             string json = File.ReadAllText(file);
             data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-
-            MessageBox.Show("read file!"); // Debug
         }
         catch (Exception ex)
         {
@@ -34,5 +32,18 @@ public class JsonHelper
 
 		data.TryGetValue(label, out JsonElement output);
 		return output.ToString();
+	}
+
+	/* public List<T>? ReturnListFor<T>(string label) 
+	{
+		string? listAsString = ReturnResultsFor(label);
+		MessageBox.Show(listAsString);
+		return listAsString == null ? null : JsonSerializer.Deserialize<List<T>>(listAsString);
+	} */
+
+	public List<JsonElement>? ReturnListFor(string label)
+	{
+		string? listAsString = ReturnResultsFor(label);
+		return listAsString == null ? null : JsonSerializer.Deserialize<List<JsonElement>>(listAsString);
 	}
 }

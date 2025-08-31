@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Threading.Tasks;
 using YT_DLP_Forwarder.Properties;
 
@@ -6,10 +7,19 @@ namespace YT_DLP_Forwarder
     public partial class Form1 : Form
     {
 
-        private JsonHelper jsonHelper;
+        private JsonHelper? jsonHelper;
         public Form1()
         {
             InitializeComponent();
+        }
+
+        private void ResetPicture()
+        {
+            if (thumbnail_pic.Image != null) thumbnail_pic.Image.Dispose();
+
+            thumbnail_pic.Image = Image.FromFile
+                (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
+            thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -19,8 +29,7 @@ namespace YT_DLP_Forwarder
                 path_textbox.Text = Settings.Default.defaultPath;
             }
 
-            thumbnail_pic.Image = Image.FromFile
-                (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
+            ResetPicture();
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -108,8 +117,10 @@ namespace YT_DLP_Forwarder
         }
 
         // Paste Button 
-        private void button1_Click_1(object sender, EventArgs e)
+        private async void button1_Click_1(object sender, EventArgs e)
         {
+            ResetPicture();
+
             // If the clipboard contains non-text data
             if (!Clipboard.GetDataObject().GetDataPresent(DataFormats.Text))
             {
@@ -120,10 +131,11 @@ namespace YT_DLP_Forwarder
             url_box.Text = "";
             url_box.Paste();
 
-            getThumbnailAndTitle();
+            await DownloadJSON(); 
+            ApplyVideoInfo();
         }
-
-        private async Task getThumbnailAndTitle()
+        
+        private async Task DownloadJSON()
         {
             var process = new System.Diagnostics.Process();
             process.StartInfo.FileName = "yt-dlp.exe";
@@ -136,10 +148,12 @@ namespace YT_DLP_Forwarder
             await process.WaitForExitAsync();
             jsonHelper = new JsonHelper
                 (Path.Combine(Path.GetTempPath(), "cv.info.json"));
+        }
 
-            string? thumbnailURL = jsonHelper.ReturnResultsFor("thumbnail");
+        private async void ApplyVideoInfo()
+        {
+            string? thumbnailURL = GetBestThumbnailURL();
 
-     
             using var client = new HttpClient();
             byte[] imageBytes = await client.GetByteArrayAsync(thumbnailURL);
             await File.WriteAllBytesAsync
@@ -151,8 +165,25 @@ namespace YT_DLP_Forwarder
 
             string? vidName = jsonHelper.ReturnResultsFor("title");
             vid_name_label.Text = vidName;
+        }
 
-            MessageBox.Show(Path.Combine(Path.GetTempPath(), "filename.file"));
+        private string? GetBestThumbnailURL()
+        {
+            /* YT-DLP contains both a singular "thumbnail" field along with a "thumbnails" list
+             * "thumbnails" contains the higher quality versions but might not always exist
+             * use "thumbnail" as a backup for such instances */
+            
+            Stack<JsonElement>? thumbnailStack = new Stack<JsonElement>(jsonHelper.ReturnListFor("thumbnails"));
+
+            JsonElement poppedThumbnail;
+            do {
+                poppedThumbnail = thumbnailStack.Pop();
+            } while (!poppedThumbnail.ToString().Contains(".jpg"));
+
+            if (thumbnailStack.Count > 0)
+                return poppedThumbnail.GetProperty("url").GetString();
+
+            return jsonHelper.ReturnResultsFor("thumbnail");
         }
 
         private void copy_button_Click(object sender, EventArgs e)
