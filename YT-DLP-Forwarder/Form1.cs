@@ -195,24 +195,25 @@ namespace YT_DLP_Forwarder
 
         private async void thumbnail_pic_Click(object sender, EventArgs e) {
             if (highestQualityThumbnailURL != null) {
-                string? pathToSave = null;
 
-                using (FolderBrowserDialog folderDialog = new FolderBrowserDialog()) {
-                    folderDialog.Description = "Select directory to save thumbnail to...";
-                    folderDialog.UseDescriptionForTitle = true;
-                    folderDialog.ShowNewFolderButton = true;
-
-                    if (folderDialog.ShowDialog() == DialogResult.OK) {
-                        pathToSave = folderDialog.SelectedPath;
-                    }
+                // remove all the illegal characters (< > : " / \ | ? *)
+                string fileName = jsonHelper.ReturnResultsFor("title") + ".jpg";
+                foreach (char c in Path.GetInvalidFileNameChars()) {
+                    fileName = fileName.Replace(c.ToString(), "");
                 }
+                
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "JPEG Image|*.jpg";
+                saveFileDialog.Title = "Save an Image File";
+                saveFileDialog.FileName = fileName;
 
-                if (pathToSave == null) return;
+                if (saveFileDialog.ShowDialog(this) == DialogResult.OK) {
 
-                using var client = new HttpClient();
-                byte[] imageBytes = await client.GetByteArrayAsync(highestQualityThumbnailURL);
-                await File.WriteAllBytesAsync
-                    (Path.Combine(pathToSave, jsonHelper.ReturnResultsFor("title") + ".jpg"), imageBytes);
+                    using var client = new HttpClient();
+                    byte[] imageBytes = await client.GetByteArrayAsync(highestQualityThumbnailURL);
+                    await File.WriteAllBytesAsync
+                        (saveFileDialog.FileName, imageBytes);
+                } 
             }
         }
 
