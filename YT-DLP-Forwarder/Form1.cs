@@ -127,27 +127,32 @@ namespace YT_DLP_Forwarder
         {
             var process = new System.Diagnostics.Process();
             process.StartInfo.FileName = "yt-dlp.exe";
-            process.StartInfo.Arguments = "-o cv --write-info-json --skip-download " + url_box.Text;
+            process.StartInfo.Arguments =
+                "-o " + Path.Combine(Path.GetTempPath(), "cv") + " --write-info-json --skip-download " + url_box.Text;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = true;
             process.Start();
 
             await process.WaitForExitAsync();
-            jsonHelper = new JsonHelper("cv.info.json");
+            jsonHelper = new JsonHelper
+                (Path.Combine(Path.GetTempPath(), "cv.info.json"));
 
             string? thumbnailURL = jsonHelper.ReturnResultsFor("thumbnail");
 
-            // TODO (See if photo can be stored in %temp% or even just RAM?
+     
             using var client = new HttpClient();
             byte[] imageBytes = await client.GetByteArrayAsync(thumbnailURL);
-            await File.WriteAllBytesAsync("thumbnail.jpg", imageBytes);
+            await File.WriteAllBytesAsync
+                (Path.Combine(Path.GetTempPath(), "thumbnail.jpg"), imageBytes);
 
             thumbnail_pic.Image = Image.FromFile
-                (Path.Combine(Application.StartupPath, "thumbnail.jpg"));
+                (Path.Combine(Path.GetTempPath(), "thumbnail.jpg"));
             thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
 
             string? vidName = jsonHelper.ReturnResultsFor("title");
             vid_name_label.Text = vidName;
+
+            MessageBox.Show(Path.Combine(Path.GetTempPath(), "filename.file"));
         }
 
         private void copy_button_Click(object sender, EventArgs e)
