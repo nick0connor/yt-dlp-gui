@@ -26,8 +26,7 @@
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
-        private void InitializeComponent()
-        {
+        private void InitializeComponent() {
             url_box = new TextBox();
             label1 = new Label();
             download_button = new Button();
@@ -51,6 +50,7 @@
             url_box.Name = "url_box";
             url_box.Size = new Size(307, 23);
             url_box.TabIndex = 0;
+            url_box.KeyDown += url_box_KeyDown;
             // 
             // label1
             // 
@@ -168,6 +168,7 @@
             thumbnail_pic.Size = new Size(192, 108);
             thumbnail_pic.TabIndex = 11;
             thumbnail_pic.TabStop = false;
+            thumbnail_pic.Click += thumbnail_pic_Click;
             // 
             // vid_name_label
             // 
