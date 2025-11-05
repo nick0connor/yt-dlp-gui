@@ -1,3 +1,5 @@
+using System.Drawing.Text;
+using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
 using YT_DLP_Forwarder.Properties;
@@ -13,20 +15,49 @@ namespace YT_DLP_Forwarder
             InitializeComponent();
         }
 
-        private void ResetPicture() {
-            if (thumbnail_pic.Image != null) thumbnail_pic.Image.Dispose();
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            CheckForYTDLP();
 
-            thumbnail_pic.Image = Image.FromFile
-                (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
-            thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
-        }
-
-        private void Form1_Load(object sender, EventArgs e) {
-            if (!string.IsNullOrWhiteSpace(Settings.Default.defaultPath)) {
+            if (!string.IsNullOrWhiteSpace(Settings.Default.defaultPath))
+            {
                 path_textbox.Text = Settings.Default.defaultPath;
             }
 
             ResetPicture();
+        }
+
+        private void CheckForYTDLP()
+        {
+            if (File.Exists(
+                Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"))) return;
+
+            if (MessageBox.Show(
+                "YT-DLP not detected!\n\nPlease download yt-dlp.exe and put it in the same directory as this exe." +
+                    " Would you like to open the download page now?", 
+                "ERROR", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk
+                ) == DialogResult.Yes)
+            {
+                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                proc.StartInfo.UseShellExecute = true;
+                proc.StartInfo.FileName = "https://github.com/yt-dlp/yt-dlp/releases";
+                proc.Start();
+            }
+
+            this.Close();
+        }
+
+        private void ResetPicture() {
+            if (thumbnail_pic.Image != null) thumbnail_pic.Image.Dispose();
+
+            // Temporary Measure for if the Missing Thumbnail File is Missing
+            // No, the irony is not lost on me
+            try{
+                thumbnail_pic.Image = Image.FromFile
+                    (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
+            } catch (Exception ex) {}
+
+            thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
         private void label1_Click(object sender, EventArgs e) {
