@@ -15,29 +15,25 @@ namespace YT_DLP_Forwarder
             InitializeComponent();
         }
 
-        private void Form1_Load(object sender, EventArgs e)
-        {
+        private void Form1_Load(object sender, EventArgs e) {
             CheckForYTDLP();
 
-            if (!string.IsNullOrWhiteSpace(Settings.Default.defaultPath))
-            {
+            if (!string.IsNullOrWhiteSpace(Settings.Default.defaultPath)) {
                 path_textbox.Text = Settings.Default.defaultPath;
             }
 
             ResetPicture();
         }
 
-        private void CheckForYTDLP()
-        {
+        private void CheckForYTDLP() {
             if (File.Exists(
                 Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"))) return;
 
             if (MessageBox.Show(
                 "YT-DLP not detected!\n\nPlease download yt-dlp.exe and put it in the same directory as this exe." +
-                    "\nWould you like to open the download page now?", 
+                    "\nWould you like to open the download page now?",
                 "ERROR", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk
-                ) == DialogResult.Yes)
-            {
+                ) == DialogResult.Yes) {
                 System.Diagnostics.Process proc = new System.Diagnostics.Process();
                 proc.StartInfo.UseShellExecute = true;
                 proc.StartInfo.FileName = "https://github.com/yt-dlp/yt-dlp/releases";
@@ -52,10 +48,10 @@ namespace YT_DLP_Forwarder
 
             // Temporary Measure for if the Missing Thumbnail File is Missing
             // No, the irony is not lost on me
-            try{
+            try {
                 thumbnail_pic.Image = Image.FromFile
                     (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
-            } catch (Exception ex) {}
+            } catch (Exception ex) { }
 
             thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
         }
@@ -68,34 +64,33 @@ namespace YT_DLP_Forwarder
 
         }
 
-        // Download Button
-        private void button1_Click(object sender, EventArgs e) {
-            if (string.IsNullOrWhiteSpace(url_box.Text)
-                || string.IsNullOrWhiteSpace(path_textbox.Text)
-                || (!video_mp4_radio.Checked && !audio_mp3_button.Checked)) {
-                MessageBox.Show("Fully input values!");
-                return;
-            }
+        private void download_Click(object sender, EventArgs e) {
+            //if (string.IsNullOrWhiteSpace(url_box.Text)
+            //    || string.IsNullOrWhiteSpace(path_textbox.Text)
+            //    || (!video_mp4_radio.Checked && !audio_mp3_button.Checked)) {
+            //    MessageBox.Show("Fully input values!");
+            //    return;
+            //}
 
-            bool downloadMP4 = video_mp4_radio.Checked;
-            String url = url_box.Text;
-            String path = path_textbox.Text;
+            //bool downloadMP4 = video_mp4_radio.Checked;
+            //String url = url_box.Text;
+            //String path = path_textbox.Text;
 
-            //MessageBox.Show("You entered " + url);
-            String command = "yt-dlp";
+            ////MessageBox.Show("You entered " + url);
+            //String command = "yt-dlp";
 
-            if (downloadMP4) {
-                command += " -f \"bestvideo[ext=mp4]+bestaudio\"";
-            } else {
-                command += " -x --audio-format mp3";
-            }
+            //if (downloadMP4) {
+            //    command += " -f \"bestvideo[ext=mp4]+bestaudio\"";
+            //} else {
+            //    command += " -x --audio-format mp3";
+            //}
 
-            command += " -P \"" + path + "\"";
-            command += " " + url;
+            //command += " -P \"" + path + "\"";
+            //command += " " + url;
 
-            // TODO (replace with yt-dlp direct call)
-            System.Diagnostics.Process.Start("cmd.exe", "/c " + command); // opens CMD to run the command
-            result_box.Text = command; // displays the command (mostly for debug purposes)
+            //// TODO (replace with yt-dlp direct call)
+            //System.Diagnostics.Process.Start("cmd.exe", "/c " + command); // opens CMD to run the command
+            //result_box.Text = command; // displays the command (mostly for debug purposes)
 
             saveOptionsToFile();
         }
@@ -118,13 +113,12 @@ namespace YT_DLP_Forwarder
 
         private void saveOptionsToFile() {
             Settings.Default.defaultPath = path_textbox.Text;
-
-
             Settings.Default.Save();
         }
 
-        // Paste Button 
-        private void button1_Click_1(object sender, EventArgs e) {
+
+        //********************* VIDEO ENTRY *********************//
+        private void paste_Click(object sender, EventArgs e) {
             ResetPicture();
 
             // If the clipboard contains non-text data
@@ -138,7 +132,11 @@ namespace YT_DLP_Forwarder
 
             VideoUrlEntered();
         }
-
+        private void url_box_KeyDown(object sender, KeyEventArgs e) {
+            if (e.KeyCode == Keys.Enter) {
+                VideoUrlEntered();
+            }
+        }
         private async void VideoUrlEntered() {
             await DownloadJSON();
             ApplyVideoInfo();
@@ -165,6 +163,52 @@ namespace YT_DLP_Forwarder
             ResetPicture();
             LoadBestAvailableThumbnail();
             thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
+
+
+            List<JsonElement>? formatsList = jsonHelper.ReturnListFor("formats");
+            if (formatsList == null) {
+                MessageBox.Show("Unable to retrieve available formats!");
+                return;
+            }
+            ListAvailableFormats(formatsList);
+
+
+            // KILL THE EVIL JSON FILE AFTER IT STOPS BEING USEFUL!!!
+            File.Delete(Path.Combine(Path.GetTempPath(), "cv.info.json"));
+        }
+
+        private void ListAvailableFormats(List<JsonElement> formats) {
+
+            string debugLabelString = "ID\t| EXT\t| RES\t| FPS\t| SIZE\t| VCODEC\t| ACODEC\n";
+            string? id, ext, res, fps, vcod, acod;
+            double? size = -1;
+            //List<string> columns = new() { "ext", "resolution", "fps", "filesize", "vcodec", "acodec" };
+
+            // Helper function to make code more readable while hardcoding this monstrocity 
+            string GetValueString(JsonElement json, string value)
+                => json.TryGetProperty(value, out JsonElement output) ? output.ToString() : "N/A";
+
+            foreach (JsonElement format in formats) {
+                if (GetValueString(format, "format_note") == "storyboard") continue;
+
+                id   = GetValueString(format, "format_id");
+                ext  = GetValueString(format, "ext");
+                res  = GetValueString(format, "resolution");
+                fps  = GetValueString(format, "fps");
+                vcod = GetValueString(format, "vcodec");
+                acod = GetValueString(format, "acodec");
+
+                // Convert the size in bytes from "filesize" property to MB if exists
+                format.TryGetProperty("filesize", out JsonElement sizeJson);
+                if (sizeJson.ValueKind == JsonValueKind.Number) { 
+                    size = Math.Round((sizeJson.GetDouble() / 1000000), 2); // 1,000,000 bytes per MB
+                }
+
+                debugLabelString +=
+                    id + "\t| " + ext + "\t| " + res + "\t| " + fps + "\t| " + vcod + "\t| " + acod + "\t|\n"; 
+            }
+
+            debug_format_label.Text = debugLabelString;
         }
 
         // hardcoding right now while testing
@@ -211,7 +255,7 @@ namespace YT_DLP_Forwarder
 
             //System.Windows.Forms.Clipboard.SetText(result_box.Text);
             Clipboard.SetText(result_box.Text);
-        }    
+        }
 
         private async void thumbnail_pic_Click(object sender, EventArgs e) {
             if (highestQualityThumbnailURL != null) {
@@ -221,7 +265,7 @@ namespace YT_DLP_Forwarder
                 foreach (char c in Path.GetInvalidFileNameChars()) {
                     fileName = fileName.Replace(c.ToString(), "");
                 }
-                
+
                 SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Filter = "JPEG Image|*.jpg";
                 saveFileDialog.Title = "Save an Image File";
@@ -233,15 +277,11 @@ namespace YT_DLP_Forwarder
                     byte[] imageBytes = await client.GetByteArrayAsync(highestQualityThumbnailURL);
                     await File.WriteAllBytesAsync
                         (saveFileDialog.FileName, imageBytes);
-                } 
+                }
             }
         }
 
-        private void url_box_KeyDown(object sender, KeyEventArgs e) {
-            if (e.KeyCode == Keys.Enter) {
-                VideoUrlEntered();
-            }
-        }
+        
 
 
 
@@ -249,7 +289,7 @@ namespace YT_DLP_Forwarder
 
 
 
-        //*********************UNUSED FUNCTIONS*********************//
+        //********************* UNUSED FUNCTIONS *********************//
         private void label1_Click(object sender, EventArgs e) {
 
         }
@@ -259,6 +299,14 @@ namespace YT_DLP_Forwarder
         }
 
         private void label3_Click(object sender, EventArgs e) {
+
+        }
+
+        private void vScrollBar1_Scroll(object sender, ScrollEventArgs e) {
+
+        }
+
+        private void label3_Click_1(object sender, EventArgs e) {
 
         }
     }
