@@ -34,7 +34,7 @@ namespace YT_DLP_Forwarder
 
             if (MessageBox.Show(
                 "YT-DLP not detected!\n\nPlease download yt-dlp.exe and put it in the same directory as this exe." +
-                    " Would you like to open the download page now?", 
+                    "\nWould you like to open the download page now?", 
                 "ERROR", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk
                 ) == DialogResult.Yes)
             {
@@ -60,9 +60,6 @@ namespace YT_DLP_Forwarder
             thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
-        private void label1_Click(object sender, EventArgs e) {
-
-        }
 
         private void radioButton1_CheckedChanged(object sender, EventArgs e) {
 
@@ -117,10 +114,6 @@ namespace YT_DLP_Forwarder
                     path_textbox.Text = folderDialog.SelectedPath;
                 }
             }
-        }
-
-        private void path_textbox_TextChanged(object sender, EventArgs e) {
-
         }
 
         private void saveOptionsToFile() {
@@ -218,11 +211,7 @@ namespace YT_DLP_Forwarder
 
             //System.Windows.Forms.Clipboard.SetText(result_box.Text);
             Clipboard.SetText(result_box.Text);
-        }
-
-        private void label3_Click(object sender, EventArgs e) {
-
-        }
+        }    
 
         private async void thumbnail_pic_Click(object sender, EventArgs e) {
             if (highestQualityThumbnailURL != null) {
@@ -252,6 +241,25 @@ namespace YT_DLP_Forwarder
             if (e.KeyCode == Keys.Enter) {
                 VideoUrlEntered();
             }
+        }
+
+
+
+
+
+
+
+        //*********************UNUSED FUNCTIONS*********************//
+        private void label1_Click(object sender, EventArgs e) {
+
+        }
+
+        private void path_textbox_TextChanged(object sender, EventArgs e) {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e) {
+
         }
     }
 }
