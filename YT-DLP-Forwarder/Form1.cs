@@ -179,33 +179,15 @@ namespace YT_DLP_Forwarder
 
         private void ListAvailableFormats(List<JsonElement> formats) {
 
-            string debugLabelString = "ID\t| EXT\t| RES\t| FPS\t| SIZE\t| VCODEC\t| ACODEC\n";
-            string? id, ext, res, fps, vcod, acod;
-            double? size = -1;
-            //List<string> columns = new() { "ext", "resolution", "fps", "filesize", "vcodec", "acodec" };
-
-            // Helper function to make code more readable while hardcoding this monstrocity 
-            string GetValueString(JsonElement json, string value)
-                => json.TryGetProperty(value, out JsonElement output) ? output.ToString() : "N/A";
+            string debugLabelString = "ID, EXT, RES, FPS, SIZE, VCODEC, ACODEC\n";
+            List<VideoFormatHelper> formatList = new List<VideoFormatHelper>(); // Put this outside the function so u can use ID later
 
             foreach (JsonElement format in formats) {
-                if (GetValueString(format, "format_note") == "storyboard") continue;
+                //if (GetValueString(format, "format_note") == "storyboard") continue;
+                
+                formatList.Add(new VideoFormatHelper(format));
 
-                id   = GetValueString(format, "format_id");
-                ext  = GetValueString(format, "ext");
-                res  = GetValueString(format, "resolution");
-                fps  = GetValueString(format, "fps");
-                vcod = GetValueString(format, "vcodec");
-                acod = GetValueString(format, "acodec");
-
-                // Convert the size in bytes from "filesize" property to MB if exists
-                format.TryGetProperty("filesize", out JsonElement sizeJson);
-                if (sizeJson.ValueKind == JsonValueKind.Number) { 
-                    size = Math.Round((sizeJson.GetDouble() / 1000000), 2); // 1,000,000 bytes per MB
-                }
-
-                debugLabelString +=
-                    id + "\t| " + ext + "\t| " + res + "\t| " + fps + "\t| " + vcod + "\t| " + acod + "\t|\n"; 
+                debugLabelString += formatList.Last().ToString();
             }
 
             debug_format_label.Text = debugLabelString;
