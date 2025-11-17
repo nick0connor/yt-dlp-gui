@@ -174,7 +174,7 @@ namespace YT_DLP_Forwarder
 
 
             // KILL THE EVIL JSON FILE AFTER IT STOPS BEING USEFUL!!!
-            File.Delete(Path.Combine(Path.GetTempPath(), "cv.info.json"));
+            //File.Delete(Path.Combine(Path.GetTempPath(), "cv.info.json"));
         }
 
         private void ListAvailableFormats(List<JsonElement> formats) {
