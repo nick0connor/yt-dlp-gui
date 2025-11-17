@@ -1,5 +1,12 @@
 namespace YT_DLP_Forwarder
 {
+    public enum VideoTypes
+    {
+        Thumbnail,
+        Audio,
+        Video,
+        Both
+    }
     internal static class Program
     {
         /// <summary>

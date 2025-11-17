@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Text;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using YT_DLP_Forwarder;
 
 public class VideoFormatHelper {
 
@@ -13,6 +15,7 @@ public class VideoFormatHelper {
     string? extension, resolution, vcodec, acodec, sizeString;
     double? sizeDouble;
     short? fps;
+    VideoTypes videoType; 
 
     public VideoFormatHelper(JsonElement _formatJson) {
         formatJson = _formatJson;
@@ -21,13 +24,21 @@ public class VideoFormatHelper {
     }
 
     private void InitializeValues() {
-        ID = StringFromValue("format_id");
-        extension = StringFromValue("ext");
-        resolution = StringFromValue("resolution");
-        fps = NumberFromValue<short>("fps");
-        vcodec = StringFromValue("vcodec");
-        acodec = StringFromValue("acodec");
-        sizeDouble = NumberFromValue<double>("filesize");
+        ID          = StringFromValue("format_id");
+        extension   = StringFromValue("ext");
+        resolution  = StringFromValue("resolution");
+        fps         = NumberFromValue<short>("fps");
+        vcodec      = StringFromValue("vcodec");
+        acodec      = StringFromValue("acodec");
+        sizeDouble  = NumberFromValue<double>("filesize");
+
+        // Why tf isn't this working ???
+        if (vcodec == "none" || vcodec == null) { // No Audio Codec > either Audio Only or Thumbnail
+            videoType = (acodec == "none" || acodec == null) ? VideoTypes.Thumbnail : VideoTypes.Audio;
+        }
+        else {
+            videoType = (acodec == "none" || acodec == null) ? VideoTypes.Video : VideoTypes.Both;
+        }
 
         if (sizeDouble == null) {
             sizeString = "N/A";
@@ -44,12 +55,14 @@ public class VideoFormatHelper {
         // even tho i check for null right before, the code don't know that
     }
 
-    private string? StringFromValue(string value) {
+    private string? StringFromValue(string value)
+    {
         formatJson.TryGetProperty(value, out JsonElement output);
-        return (output.ValueKind == JsonValueKind.Null)? null : output.ToString();
+        return (output.ValueKind == JsonValueKind.Null) ? null : output.ToString();
     }
 
-    private T? NumberFromValue<T>(string value) where T : struct { 
+    private T? NumberFromValue<T>(string value) where T : struct
+    {
         formatJson.TryGetProperty(value, out JsonElement output);
         if (output.ValueKind != JsonValueKind.Number) return null;
 
@@ -61,6 +74,11 @@ public class VideoFormatHelper {
 
     public string GetID() {
         return ID;
+    }
+
+    public VideoTypes GetType()
+    {
+        return videoType;
     }
     
     public override string ToString() {

@@ -179,18 +179,59 @@ namespace YT_DLP_Forwarder
 
         private void ListAvailableFormats(List<JsonElement> formats) {
 
-            string debugLabelString = "ID, EXT, RES, FPS, SIZE, VCODEC, ACODEC\n";
-            List<VideoFormatHelper> formatList = new List<VideoFormatHelper>(); // Put this outside the function so u can use ID later
+            //string debugLabelString = "ID, EXT, RES, FPS, SIZE, VCODEC, ACODEC\n";
+            //List<VideoFormatHelper> formatList = new List<VideoFormatHelper>(); // Put this outside the function so u can use ID later
+
+            //foreach (JsonElement format in formats) {
+            //    //if (GetValueString(format, "format_note") == "storyboard") continue;
+
+            //    formatList.Add(new VideoFormatHelper(format));
+
+            //    debugLabelString += formatList.Last().ToString();
+            //}
+
+            //debug_format_label.Text = debugLabelString;
+
+            List<VideoFormatHelper> videoList = new List<VideoFormatHelper>(), audioList = new List<VideoFormatHelper>(), thumbnailList = new List<VideoFormatHelper>();
+            string columnLabels = "ID, EXT, RES, FPS, SIZE, VCODEC, ACODEC\n";
 
             foreach (JsonElement format in formats) {
-                //if (GetValueString(format, "format_note") == "storyboard") continue;
-                
-                formatList.Add(new VideoFormatHelper(format));
+                VideoFormatHelper curFormat = new VideoFormatHelper(format);
 
-                debugLabelString += formatList.Last().ToString();
+                switch (curFormat.GetType()){
+                    case VideoTypes.Both:
+                    case VideoTypes.Video:
+                        videoList.Add(curFormat);
+                        break;
+                    case VideoTypes.Audio:
+                        audioList.Add(curFormat);
+                        break;
+                    case VideoTypes.Thumbnail:
+                        thumbnailList.Add(curFormat);
+                        break;
+                }
             }
 
-            debug_format_label.Text = debugLabelString;
+            string s = "";
+            foreach (VideoFormatHelper f in videoList)
+            {
+                s += f.ToString();
+            }
+            MessageBox.Show("VIDEOS\n\n" + columnLabels + "\n" + s);
+
+            s = "";
+            foreach (VideoFormatHelper f in audioList)
+            {
+                s += f.ToString();
+            }
+            MessageBox.Show("AUDIO ONLYs\n\n" + columnLabels + "\n" + s);
+
+            s = "";
+            foreach (VideoFormatHelper f in thumbnailList)
+            {
+                s += f.ToString();
+            }
+            MessageBox.Show("THUMBNAILS\n\n" + columnLabels + "\n" + s);
         }
 
         // hardcoding right now while testing
