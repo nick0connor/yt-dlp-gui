@@ -2,6 +2,7 @@ using System.Drawing.Text;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using YT_DLP_Forwarder.Properties;
 
 namespace YT_DLP_Forwarder
@@ -11,6 +12,7 @@ namespace YT_DLP_Forwarder
 
         private JsonHelper? jsonHelper;
         private string? highestQualityThumbnailURL;
+        private List<VideoFormat> videoList, audioList;
 
         public Form1()
         {
@@ -66,44 +68,44 @@ namespace YT_DLP_Forwarder
             thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
-
-        private void radioButton1_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-        private void radioButton2_CheckedChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void download_Click(object sender, EventArgs e)
         {
-            //if (string.IsNullOrWhiteSpace(url_box.Text)
-            //    || string.IsNullOrWhiteSpace(path_textbox.Text)
-            //    || (!video_mp4_radio.Checked && !audio_mp3_button.Checked)) {
-            //    MessageBox.Show("Fully input values!");
-            //    return;
-            //}
+            if (string.IsNullOrWhiteSpace(url_box.Text)
+                || string.IsNullOrWhiteSpace(path_textbox.Text)
+                || (Video.CheckedItems.Count == 0 && Audio.CheckedItems.Count == 0))
+            {
+                MessageBox.Show("Fully input values!");
+                return;
+            }
 
-            //bool downloadMP4 = video_mp4_radio.Checked;
-            //String url = url_box.Text;
-            //String path = path_textbox.Text;
+            // Make sure user doesn't select both No Video and No Audio
+            if (Audio.CheckedIndices[0] == 0 && Video.CheckedIndices[0] == 0) {
+                MessageBox.Show("You must select one real format!");
+                return;
+            }
 
-            ////MessageBox.Show("You entered " + url);
-            //String command = "yt-dlp";
+            string url = url_box.Text;
+            string path = path_textbox.Text;
+            string format = "";
+                                   
+            // No Audio (Video Only)
+            if (Audio.CheckedIndices[0] == 0) {
+                format = "-f " + ((VideoFormat)Video.CheckedItems[0]).GetID();
+            }
 
-            //if (downloadMP4) {
-            //    command += " -f \"bestvideo[ext=mp4]+bestaudio\"";
-            //} else {
-            //    command += " -x --audio-format mp3";
-            //}
+            // No Video (Audio Only)
+            if (Video.CheckedIndices[0] == 0) { 
+                format = "-x -f " + ((VideoFormat)Audio.CheckedItems[0]).GetID();
+            }
 
-            //command += " -P \"" + path + "\"";
-            //command += " " + url;
+            string command = format + " -P \"" + path + "\" " + url;
 
-            //// TODO (replace with yt-dlp direct call)
-            //System.Diagnostics.Process.Start("cmd.exe", "/c " + command); // opens CMD to run the command
-            //result_box.Text = command; // displays the command (mostly for debug purposes)
+            var process = new System.Diagnostics.Process();
+            process.StartInfo.FileName = "yt-dlp.exe";
+            process.StartInfo.Arguments = command;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = false;
+            process.Start();
 
             saveOptionsToFile();
         }
@@ -202,9 +204,8 @@ namespace YT_DLP_Forwarder
 
         private void ListAvailableFormats(List<JsonElement> formats) {
         
-            List<VideoFormat> videoList = new List<VideoFormat>(),
-                audioList = new List<VideoFormat>(),
-                thumbnailList = new List<VideoFormat>();
+            List<VideoFormat> thumbnailList = new List<VideoFormat>();
+            videoList = new List<VideoFormat>(); audioList = new List<VideoFormat>();
 
             foreach (JsonElement format in formats)
             {
@@ -326,7 +327,6 @@ namespace YT_DLP_Forwarder
             }
         }
 
-
         //********************* FORMAT CHECKBOXES *********************//
         private void Video_ItemCheck(object? sender, ItemCheckEventArgs e) {
             if(e.NewValue == CheckState.Checked) {
@@ -347,9 +347,6 @@ namespace YT_DLP_Forwarder
                 if(i != e.Index) checkboxes.SetItemChecked(i, false);
             }
         }
-
-
-
 
         //********************* UNUSED FUNCTIONS *********************//
         private void label1_Click(object sender, EventArgs e)
