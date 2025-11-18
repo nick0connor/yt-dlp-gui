@@ -6,16 +6,21 @@ using YT_DLP_Forwarder.Properties;
 
 namespace YT_DLP_Forwarder
 {
-    public partial class Form1 : Form {
+    public partial class Form1 : Form
+    {
 
         private JsonHelper? jsonHelper;
         private string? highestQualityThumbnailURL;
 
-        public Form1() {
+        public Form1()
+        {
             InitializeComponent();
+            Video.ItemCheck += Video_ItemCheck;
+            Audio.ItemCheck += Audio_ItemCheck;
         }
 
-        private void Form1_Load(object sender, EventArgs e) {
+        private void Form1_Load(object sender, EventArgs e)
+        {
             CheckForYTDLP();
 
             if (!string.IsNullOrWhiteSpace(Settings.Default.defaultPath)) {
@@ -25,7 +30,8 @@ namespace YT_DLP_Forwarder
             ResetPicture();
         }
 
-        private void CheckForYTDLP() {
+        private void CheckForYTDLP()
+        {
             if (File.Exists(
                 Path.Combine(Environment.CurrentDirectory, "yt-dlp.exe"))) return;
 
@@ -33,7 +39,8 @@ namespace YT_DLP_Forwarder
                 "YT-DLP not detected!\n\nPlease download yt-dlp.exe and put it in the same directory as this exe." +
                     "\nWould you like to open the download page now?",
                 "ERROR", MessageBoxButtons.YesNo, MessageBoxIcon.Asterisk
-                ) == DialogResult.Yes) {
+                ) == DialogResult.Yes)
+            {
                 System.Diagnostics.Process proc = new System.Diagnostics.Process();
                 proc.StartInfo.UseShellExecute = true;
                 proc.StartInfo.FileName = "https://github.com/yt-dlp/yt-dlp/releases";
@@ -43,28 +50,34 @@ namespace YT_DLP_Forwarder
             this.Close();
         }
 
-        private void ResetPicture() {
+        private void ResetPicture()
+        {
             if (thumbnail_pic.Image != null) thumbnail_pic.Image.Dispose();
 
             // Temporary Measure for if the Missing Thumbnail File is Missing
             // No, the irony is not lost on me
-            try {
+            try
+            {
                 thumbnail_pic.Image = Image.FromFile
                     (Path.Combine(Application.StartupPath, "missing_thumbnail.jpg"));
-            } catch (Exception ex) { }
+            }
+            catch (Exception ex) { }
 
             thumbnail_pic.SizeMode = PictureBoxSizeMode.StretchImage;
         }
 
 
-        private void radioButton1_CheckedChanged(object sender, EventArgs e) {
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
 
         }
-        private void radioButton2_CheckedChanged(object sender, EventArgs e) {
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
 
         }
 
-        private void download_Click(object sender, EventArgs e) {
+        private void download_Click(object sender, EventArgs e)
+        {
             //if (string.IsNullOrWhiteSpace(url_box.Text)
             //    || string.IsNullOrWhiteSpace(path_textbox.Text)
             //    || (!video_mp4_radio.Checked && !audio_mp3_button.Checked)) {
@@ -95,34 +108,38 @@ namespace YT_DLP_Forwarder
             saveOptionsToFile();
         }
 
-        private void label2_Click(object sender, EventArgs e) {
+        
 
-        }
-
-        private void browse_button_Click(object sender, EventArgs e) {
-            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog()) {
+        private void browse_button_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
                 folderDialog.Description = "Select directory to save file to...";
                 folderDialog.UseDescriptionForTitle = true;
                 folderDialog.ShowNewFolderButton = true;
 
-                if (folderDialog.ShowDialog() == DialogResult.OK) {
+                if (folderDialog.ShowDialog() == DialogResult.OK)
+                {
                     path_textbox.Text = folderDialog.SelectedPath;
                 }
             }
         }
 
-        private void saveOptionsToFile() {
+        private void saveOptionsToFile()
+        {
             Settings.Default.defaultPath = path_textbox.Text;
             Settings.Default.Save();
         }
 
 
         //********************* VIDEO ENTRY *********************//
-        private void paste_Click(object sender, EventArgs e) {
+        private void paste_Click(object sender, EventArgs e)
+        {
             ResetPicture();
 
             // If the clipboard contains non-text data
-            if (!Clipboard.GetDataObject().GetDataPresent(DataFormats.Text)) {
+            if (!Clipboard.GetDataObject().GetDataPresent(DataFormats.Text))
+            {
                 MessageBox.Show("No Text Copied!");
                 return;
             }
@@ -132,17 +149,21 @@ namespace YT_DLP_Forwarder
 
             VideoUrlEntered();
         }
-        private void url_box_KeyDown(object sender, KeyEventArgs e) {
-            if (e.KeyCode == Keys.Enter) {
+        private void url_box_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
                 VideoUrlEntered();
             }
         }
-        private async void VideoUrlEntered() {
+        private async void VideoUrlEntered()
+        {
             await DownloadJSON();
             ApplyVideoInfo();
         }
 
-        private async Task DownloadJSON() {
+        private async Task DownloadJSON()
+        {
             var process = new System.Diagnostics.Process();
             process.StartInfo.FileName = "yt-dlp.exe";
             process.StartInfo.Arguments =
@@ -156,7 +177,8 @@ namespace YT_DLP_Forwarder
                 (Path.Combine(Path.GetTempPath(), "cv.info.json"));
         }
 
-        private void ApplyVideoInfo() {
+        private void ApplyVideoInfo()
+        {
             string? vidName = jsonHelper.ReturnResultsFor("title");
             if (vidName != null) vid_name_label.Text = vidName;
 
@@ -166,7 +188,8 @@ namespace YT_DLP_Forwarder
 
 
             List<JsonElement>? formatsList = jsonHelper.ReturnListFor("formats");
-            if (formatsList == null) {
+            if (formatsList == null)
+            {
                 MessageBox.Show("Unable to retrieve available formats!");
                 return;
             }
@@ -178,92 +201,85 @@ namespace YT_DLP_Forwarder
         }
 
         private void ListAvailableFormats(List<JsonElement> formats) {
+        
+            List<VideoFormat> videoList = new List<VideoFormat>(),
+                audioList = new List<VideoFormat>(),
+                thumbnailList = new List<VideoFormat>();
 
-            //string debugLabelString = "ID, EXT, RES, FPS, SIZE, VCODEC, ACODEC\n";
-            //List<VideoFormatHelper> formatList = new List<VideoFormatHelper>(); // Put this outside the function so u can use ID later
+            foreach (JsonElement format in formats)
+            {
+                VideoFormat curFormat = new VideoFormat(format);
 
-            //foreach (JsonElement format in formats) {
-            //    //if (GetValueString(format, "format_note") == "storyboard") continue;
-
-            //    formatList.Add(new VideoFormatHelper(format));
-
-            //    debugLabelString += formatList.Last().ToString();
-            //}
-
-            //debug_format_label.Text = debugLabelString;
-
-            List<VideoFormatHelper> videoList = new List<VideoFormatHelper>(), audioList = new List<VideoFormatHelper>(), thumbnailList = new List<VideoFormatHelper>();
-            string columnLabels = "ID, EXT, RES, FPS, SIZE, VCODEC, ACODEC\n";
-
-            foreach (JsonElement format in formats) {
-                VideoFormatHelper curFormat = new VideoFormatHelper(format);
-
-                switch (curFormat.GetType()){
+                switch (curFormat.GetType())
+                {
                     case VideoTypes.Both:
                     case VideoTypes.Video:
-                        videoList.Add(curFormat);
+                        videoList.Insert(0, curFormat);
                         break;
+
                     case VideoTypes.Audio:
-                        audioList.Add(curFormat);
+                        audioList.Insert(0, curFormat);
                         break;
+
                     case VideoTypes.Thumbnail:
-                        thumbnailList.Add(curFormat);
+                        thumbnailList.Insert(0, curFormat);
                         break;
                 }
             }
 
-            string s = "";
-            foreach (VideoFormatHelper f in videoList)
-            {
-                s += f.ToString();
-            }
-            MessageBox.Show("VIDEOS\n\n" + columnLabels + "\n" + s);
+            videoList.AddRange(thumbnailList);
 
-            s = "";
-            foreach (VideoFormatHelper f in audioList)
-            {
-                s += f.ToString();
-            }
-            MessageBox.Show("AUDIO ONLYs\n\n" + columnLabels + "\n" + s);
+            Video.Items.Add("No Video (Audio Only)");
+            Audio.Items.Add("No Audio (Video Only)");
 
-            s = "";
-            foreach (VideoFormatHelper f in thumbnailList)
-            {
-                s += f.ToString();
+            foreach (VideoFormat video in videoList) {
+                Video.Items.Add(video);
             }
-            MessageBox.Show("THUMBNAILS\n\n" + columnLabels + "\n" + s);
+
+            foreach(VideoFormat audio in audioList) {
+                Audio.Items.Add(audio);
+            }
         }
 
         // hardcoding right now while testing
         private static readonly List<string> THUMBNAIL_TITLES =
             new() { "hq720.jpg", "maxresdefault.jpg" };
-        private void LoadBestAvailableThumbnail() {
+        private void LoadBestAvailableThumbnail()
+        {
             List<JsonElement> thumbnailJsons =
                 ReturnMatches<JsonElement>(jsonHelper.ReturnListFor("thumbnails"), THUMBNAIL_TITLES);
 
             bool success = false;
             // reverse order here due to higher quality thumbnails being at the bottom of the list
-            for (int i = thumbnailJsons.Count - 1; i >= 0 && !success; i--) {
-                try {
+            for (int i = thumbnailJsons.Count - 1; i >= 0 && !success; i--)
+            {
+                try
+                {
                     highestQualityThumbnailURL = thumbnailJsons[i].GetProperty("url").GetString();
                     thumbnail_pic.Load(highestQualityThumbnailURL);
                     success = true;
-                } catch (Exception ex) { Console.WriteLine(ex); }
+                }
+                catch (Exception ex) { Console.WriteLine(ex); }
             }
 
-            if (!success) {
+            if (!success)
+            {
                 highestQualityThumbnailURL = jsonHelper.ReturnResultsFor("thumbnail");
                 thumbnail_pic.Load(highestQualityThumbnailURL);
             }
         }
 
-        private List<T> ReturnMatches<T>(List<T> inputList, List<string> filterList) {
+        private List<T> ReturnMatches<T>(List<T> inputList, List<string> filterList)
+        {
             List<T> outputList = new List<T>();
 
-            foreach (T listItem in inputList) {
+            foreach (T listItem in inputList)
+            {
                 if (listItem == null) continue;
-                foreach (string filter in filterList) {
-                    if (listItem.ToString().Contains(filter)) {
+                foreach (string filter in filterList)
+                {
+                    if (listItem.ToString().Contains(filter))
+                    {
                         outputList.Add(listItem); break;
                     }
                 }
@@ -271,8 +287,10 @@ namespace YT_DLP_Forwarder
             return outputList;
         }
 
-        private void copy_button_Click(object sender, EventArgs e) {
-            if (string.IsNullOrWhiteSpace(result_box.Text)) {
+        private void copy_button_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(result_box.Text))
+            {
                 return;
             }
 
@@ -280,12 +298,15 @@ namespace YT_DLP_Forwarder
             Clipboard.SetText(result_box.Text);
         }
 
-        private async void thumbnail_pic_Click(object sender, EventArgs e) {
-            if (highestQualityThumbnailURL != null) {
+        private async void thumbnail_pic_Click(object sender, EventArgs e)
+        {
+            if (highestQualityThumbnailURL != null)
+            {
 
                 // remove all the illegal characters (< > : " / \ | ? *)
                 string fileName = jsonHelper.ReturnResultsFor("title") + ".jpg";
-                foreach (char c in Path.GetInvalidFileNameChars()) {
+                foreach (char c in Path.GetInvalidFileNameChars())
+                {
                     fileName = fileName.Replace(c.ToString(), "");
                 }
 
@@ -294,7 +315,8 @@ namespace YT_DLP_Forwarder
                 saveFileDialog.Title = "Save an Image File";
                 saveFileDialog.FileName = fileName;
 
-                if (saveFileDialog.ShowDialog(this) == DialogResult.OK) {
+                if (saveFileDialog.ShowDialog(this) == DialogResult.OK)
+                {
 
                     using var client = new HttpClient();
                     byte[] imageBytes = await client.GetByteArrayAsync(highestQualityThumbnailURL);
@@ -304,32 +326,69 @@ namespace YT_DLP_Forwarder
             }
         }
 
-        
 
+        //********************* FORMAT CHECKBOXES *********************//
+        private void Video_ItemCheck(object? sender, ItemCheckEventArgs e) {
+            if(e.NewValue == CheckState.Checked) {
+                UncheckAllButNewest(Video, sender, e);
+            }
+        }
 
+        private void Audio_ItemCheck(object? sender, ItemCheckEventArgs e) {
+            if (e.NewValue == CheckState.Checked) {
+                UncheckAllButNewest(Audio, sender, e);
+            }
+        }
 
+        private void UncheckAllButNewest(CheckedListBox checkboxes, object sender, ItemCheckEventArgs e) {
+            int itemCount = checkboxes.Items.Count;
+
+            for(short i = 0; i < itemCount; i++) {
+                if(i != e.Index) checkboxes.SetItemChecked(i, false);
+            }
+        }
 
 
 
 
         //********************* UNUSED FUNCTIONS *********************//
-        private void label1_Click(object sender, EventArgs e) {
+        private void label1_Click(object sender, EventArgs e)
+        {
 
         }
 
-        private void path_textbox_TextChanged(object sender, EventArgs e) {
+        private void path_textbox_TextChanged(object sender, EventArgs e)
+        {
 
         }
 
-        private void label3_Click(object sender, EventArgs e) {
+        private void label3_Click(object sender, EventArgs e)
+        {
 
         }
 
-        private void vScrollBar1_Scroll(object sender, ScrollEventArgs e) {
+        private void vScrollBar1_Scroll(object sender, ScrollEventArgs e)
+        {
 
         }
 
-        private void label3_Click_1(object sender, EventArgs e) {
+        private void label3_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+        private void Video_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Audio_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
         }
     }

@@ -7,17 +7,17 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using YT_DLP_Forwarder;
 
-public class VideoFormatHelper {
+public class VideoFormat {
 
     string ID;
     private JsonElement formatJson;
 
-    string? extension, resolution, vcodec, acodec, sizeString;
+    string? extension, resolution, vcodec, acodec, sizeString, formatNote;
     double? sizeDouble;
     short? fps;
     VideoTypes videoType; 
 
-    public VideoFormatHelper(JsonElement _formatJson) {
+    public VideoFormat(JsonElement _formatJson) {
         formatJson = _formatJson;
 
         InitializeValues();
@@ -31,12 +31,11 @@ public class VideoFormatHelper {
         vcodec      = StringFromValue("vcodec");
         acodec      = StringFromValue("acodec");
         sizeDouble  = NumberFromValue<double>("filesize");
+        formatNote  = StringFromValue("format_note");
 
-        // Why tf isn't this working ???
         if (vcodec == "none" || vcodec == null) { // No Audio Codec > either Audio Only or Thumbnail
             videoType = (acodec == "none" || acodec == null) ? VideoTypes.Thumbnail : VideoTypes.Audio;
-        }
-        else {
+        } else {
             videoType = (acodec == "none" || acodec == null) ? VideoTypes.Video : VideoTypes.Both;
         }
 
@@ -82,7 +81,12 @@ public class VideoFormatHelper {
     }
     
     public override string ToString() {
-        return ID + ", " + extension + ", " + resolution + ", " +
-            fps + ", " + sizeString + ", " + vcodec + ", " + acodec + "\n";
+        if (videoType == VideoTypes.Audio) {
+            return extension + ", " + formatNote + " (" + resolution + ", " + acodec + ")";
+        }
+
+        // Videos, Thumbnails, Video+Audio
+        return resolution + ", " + fps + "fps, " + extension + " (" + 
+            vcodec + ((videoType == VideoTypes.Both)? ", " + acodec : "") + ")"; 
     }
 }
